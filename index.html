@@ -9,14 +9,15 @@
   <meta name="referrer" content="no-referrer" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <title>JSON Tools - All In One JSON</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%23818cf8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-weight='900' font-size='14' fill='white'%3E%7B%7D%3C/text%3E%3C/svg%3E" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0b0d1a;
-      --surface: #11142a;
-      --surface2: #191d35;
-      --border: #252a48;
+      --bg: #13162b;
+      --surface: #1a1e38;
+      --surface2: #22274a;
+      --border: #2e3558;
       --accent: #6366f1;
       --accent-hover: #818cf8;
       --accent-glow: rgba(99,102,241,.3);
@@ -70,37 +71,111 @@
     header {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 13px 28px;
+      gap: 16px;
+      padding: 14px 32px;
       border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: var(--shadow-sm);
+      background: rgba(17, 20, 42, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 1px 0 var(--border), 0 4px 32px rgba(0,0,0,.4);
       position: sticky;
       top: 0;
       z-index: 50;
       transition: var(--t);
     }
-    .logo {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-      border-radius: 10px;
-      display: grid; place-items: center;
-      font-weight: 900; font-size: 13px; color: #fff;
-      letter-spacing: -1px;
-      box-shadow: 0 0 20px var(--accent-glow);
-      flex-shrink: 0;
+    body.light header {
+      background: rgba(255,255,255,.85);
+      box-shadow: 0 1px 0 var(--border), 0 4px 24px rgba(99,102,241,.1);
     }
-    header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.02em; }
-    header h1 span { font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 6px; letter-spacing: 0; }
+    /* animated rainbow border at bottom */
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #6366f1, #0ea5e9, #10b981, #f59e0b, #ec4899, #6366f1);
+      background-size: 200% 100%;
+      animation: headerLine 6s linear infinite;
+      opacity: 0.7;
+    }
+    @keyframes headerLine {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+    .logo {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #818cf8 100%);
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-weight: 900; font-size: 15px; color: #fff;
+      letter-spacing: -1px;
+      box-shadow: 0 0 0 1px rgba(99,102,241,.4), 0 0 24px rgba(99,102,241,.5);
+      flex-shrink: 0;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .logo:hover {
+      transform: rotate(-8deg) scale(1.08);
+      box-shadow: 0 0 0 1px rgba(99,102,241,.6), 0 0 36px rgba(99,102,241,.7);
+    }
+    .header-brand { display: flex; flex-direction: column; gap: 1px; }
+    .header-title {
+      font-size: 1.15rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, #818cf8, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    .header-sub {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .header-badges {
+      display: flex;
+      gap: 6px;
+      margin-left: 4px;
+      flex-wrap: wrap;
+    }
+    .hbadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      border: 1px solid;
+    }
+    .hbadge-indigo { background: rgba(99,102,241,.12); color: #818cf8; border-color: rgba(99,102,241,.25); }
+    .hbadge-sky    { background: rgba(14,165,233,.12);  color: #38bdf8; border-color: rgba(14,165,233,.25); }
+    .hbadge-green  { background: rgba(16,185,129,.12);  color: #34d399; border-color: rgba(16,185,129,.25); }
+    body.light .hbadge-indigo { background: rgba(99,102,241,.08); color: #6366f1; border-color: rgba(99,102,241,.2); }
+    body.light .hbadge-sky    { background: rgba(14,165,233,.08);  color: #0ea5e9; border-color: rgba(14,165,233,.2); }
+    body.light .hbadge-green  { background: rgba(16,185,129,.08);  color: #10b981; border-color: rgba(16,185,129,.2); }
+    @media (max-width: 640px) { .header-badges { display: none; } }
     .header-spacer { flex: 1; }
-    #themeToggle { font-size: 1rem; padding: 6px 10px; line-height: 1; border-radius: 9px; }
+    #themeToggle {
+      font-size: 1rem;
+      padding: 7px 12px;
+      line-height: 1;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    #themeToggle:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
     /* ── Main layout ── */
     main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 24px 28px;
+      padding: 24px 28px 8px;
       gap: 20px;
     }
 
@@ -287,12 +362,18 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 7px 28px;
-      border-top: 1px solid var(--border);
+      margin: 0 28px 20px;
+      padding: 9px 20px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
       background: var(--surface);
+      box-shadow: 0 4px 20px rgba(0,0,0,.18), 0 0 0 1px var(--border);
       font-size: 0.76rem;
       color: var(--text-muted);
       transition: var(--t);
+    }
+    body.light .status-bar {
+      box-shadow: 0 4px 16px rgba(99,102,241,.1), 0 0 0 1px var(--border);
     }
 
     #statusMsg {
@@ -550,7 +631,10 @@
 
 <header>
   <div class="logo">{ }</div>
-  <h1>JSON Tools <span>— All In One JSON</span></h1>
+  <div class="header-brand">
+    <span class="header-title">JSON Tools</span>
+    <span class="header-sub">All-in-one JSON utility</span>
+  </div>
   <div class="header-spacer"></div>
   <button id="themeToggle" class="btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle light / dark mode">&#127769;</button>
 </header>
@@ -1431,7 +1515,13 @@
   // Init
   (function applyTheme() {
     try {
-      if (localStorage.getItem('json-tools-theme') === 'light') {
+      const saved = localStorage.getItem('json-tools-theme');
+      // Default is light; only switch to dark if explicitly saved
+      if (saved === 'dark') {
+        // dark mode — body has no .light class, nothing to add
+        document.getElementById('themeToggle').textContent = '\uD83C\uDF19';
+      } else {
+        // light mode is default
         document.body.classList.add('light');
         document.getElementById('themeToggle').textContent = '\u2600\uFE0F';
       }
