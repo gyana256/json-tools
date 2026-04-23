@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Security headers via meta (supplement with server headers in production) -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https: http:; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <title>JSON Tools - All In One JSON</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -67,6 +72,7 @@
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
+      justify-content: center;
     }
     .toolbar-group {
       display: flex;
@@ -116,13 +122,35 @@
     /* ── Editor area ── */
     .editors {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0 14px;
       flex: 1;
+      align-items: stretch;
+    }
+
+    .middle-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 0;
+    }
+    .middle-actions button { white-space: nowrap; }
+    .middle-actions .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
     }
 
     @media (max-width: 768px) {
       .editors { grid-template-columns: 1fr; }
+      .middle-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .middle-actions .divider { display: none; }
       main { padding: 16px; }
     }
 
@@ -240,6 +268,196 @@
       color: var(--text-muted);
       font-size: 0.75rem;
     }
+
+    /* ── Per-pane Find / Replace bar ── */
+    .find-bar {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .find-bar.visible { display: flex; }
+    .find-bar label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .find-bar input {
+      flex: 1;
+      min-width: 90px;
+      padding: 5px 10px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .find-bar input:focus { border-color: var(--accent); }
+    .find-bar input::placeholder { color: var(--text-muted); }
+    .find-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 64px;
+    }
+    mark.highlight {
+      background: rgba(245,158,11,.35);
+      color: inherit;
+      border-radius: 2px;
+    }
+
+    /* ── Input textarea highlight backdrop ── */
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .input-backdrop {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      white-space: pre;
+      tab-size: 2;
+      overflow: hidden;
+      pointer-events: none;
+      color: transparent;
+      word-break: break-word;
+      box-sizing: border-box;
+      border: none;
+      margin: 0;
+    }
+    mark.input-highlight {
+      background: rgba(245,158,11,.3);
+      color: transparent;
+      border-radius: 2px;
+    }
+    mark.input-highlight.current {
+      background: rgba(245,158,11,.7);
+      outline: 1px solid rgba(245,158,11,.9);
+    }
+
+    /* ── Path Picker syntax colours ── */
+    .j-str    { color: #86efac; cursor: pointer; border-radius: 2px; }
+    .j-num    { color: #93c5fd; cursor: pointer; border-radius: 2px; }
+    .j-bool   { color: #fbbf24; cursor: pointer; border-radius: 2px; }
+    .j-null   { color: #a78bfa; cursor: pointer; border-radius: 2px; }
+    .j-key    { color: #f0abfc; cursor: pointer; border-radius: 2px; }
+    .j-bracket{ color: var(--text-muted); }
+    .j-punct  { color: var(--text-muted); }
+    .j-str:hover, .j-num:hover, .j-bool:hover, .j-null:hover, .j-key:hover {
+      background: rgba(255,255,255,.1);
+      outline: 1px solid rgba(255,255,255,.2);
+    }
+    #rawModeBtn.active {
+      background: transparent;
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    /* ── Tree output ── */
+    #output.tree-mode { white-space: normal; }
+    .tree-details { display: block; }
+    .tree-details > .tree-summary {
+      cursor: pointer;
+      list-style: none;
+      display: block;
+      padding: 1px 4px;
+      margin: 0 -4px;
+      border-radius: 3px;
+      transition: background 0.1s;
+    }
+    .tree-details > .tree-summary::-webkit-details-marker { display: none; }
+    .tree-details > .tree-summary::marker { display: none; }
+    .tree-details > .tree-summary:hover { background: rgba(255,255,255,.05); }
+    .tree-caret {
+      display: inline-block;
+      width: 14px;
+      font-size: 0.65em;
+      color: var(--text-muted);
+      vertical-align: middle;
+      transition: transform 0.12s;
+      user-select: none;
+    }
+    .tree-caret::before { content: '\25BA'; }
+    .tree-details[open] > .tree-summary .tree-caret { transform: rotate(90deg); }
+    .tree-closed-hint { display: none; color: var(--text-muted); font-size: 0.82em; }
+    .tree-details:not([open]) .tree-closed-hint { display: inline; }
+    .tree-children {
+      padding-left: 1.4em;
+      border-left: 1px solid rgba(255,255,255,.07);
+      margin-left: 0.45em;
+    }
+    .tree-tail { padding: 1px 4px; margin: 0 -4px; }
+    .tree-row  { padding: 1px 4px; margin: 0 -4px; }
+    .tree-row:hover { background: rgba(255,255,255,.03); border-radius: 3px; }
+
+    /* ── Drag-and-drop overlay ── */
+    .drop-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(91,106,240,.18);
+      border: 2px dashed var(--accent);
+      border-radius: var(--radius);
+      z-index: 20;
+      pointer-events: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+    .drop-overlay.active { display: flex; }
+    .input-wrapper { position: relative; }
+
+    /* ── URL modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px 22px;
+      min-width: 420px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal h2 { font-size: 1rem; font-weight: 700; }
+    .modal input[type=url], .modal input[type=text] {
+      width: 100%;
+      padding: 9px 13px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 0.88rem;
+      font-family: var(--font-mono);
+      outline: none;
+    }
+    .modal input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .modal-hint { font-size: 0.75rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -250,26 +468,9 @@
 </header>
 
 <main>
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="toolbar-group">
-      <button class="btn-primary" onclick="prettify()" title="Format with 2-space indent">&#9654; Prettify</button>
-      <button class="btn-ghost"   onclick="minify()"   title="Remove all whitespace">Minify</button>
-      <button class="btn-ghost"   onclick="validate()" title="Check JSON validity">Validate</button>
-      <button class="btn-ghost"   onclick="escapeJson()"   title="Escape special characters">Escape</button>
-      <button class="btn-ghost"   onclick="unescapeJson()" title="Unescape \\n, \\t, \\\" etc.">Unescape</button>
-      <button class="btn-ghost"   onclick="stringify()"    title="Convert to a JSON string literal">Stringify</button>
-    </div>
-    <div class="spacer"></div>
-    <div class="toolbar-group">
-      <button class="btn-ghost btn-sm" onclick="copyOutput()" title="Copy output to clipboard">&#128203; Copy</button>
-      <button class="btn-ghost btn-sm" onclick="swapPanes()"  title="Move output back to input">&#8646; Swap</button>
-      <button class="btn-danger btn-sm" onclick="clearAll()"  title="Clear both panes">&#10005; Clear</button>
-    </div>
-  </div>
-
-  <!-- Editors -->
+  <!-- Editors with middle action buttons -->
   <div class="editors">
+
     <!-- Input pane -->
     <div class="pane">
       <div class="pane-header">
@@ -277,11 +478,45 @@
         Input
         <span class="line-count" id="inputLines"></span>
         <div class="pane-actions">
+          <button class="btn-ghost btn-sm" onclick="openUrlModal()" title="Fetch JSON from URL">&#127760; URL</button>
+          <button class="btn-ghost btn-sm" onclick="document.getElementById('fileInput').click()" title="Upload .json file">&#128193; Upload</button>
+          <button class="btn-ghost btn-sm" onclick="toggleInputFind()" title="Find &amp; Replace (Ctrl+H)">&#128269; Find</button>
           <button class="btn-ghost btn-sm" onclick="loadSample()">Load sample</button>
+          <button class="btn-danger btn-sm" onclick="clearInput()" title="Clear input">&#10005; Clear</button>
         </div>
+        <input type="file" id="fileInput" accept=".json,application/json,text/plain" style="display:none" onchange="handleFileUpload(event)" />
       </div>
-      <textarea id="input" spellcheck="false" placeholder='Paste your JSON here…&#10;&#10;{"name":"Alice","age":30}'
-        oninput="onInputChange()"></textarea>
+      <div class="find-bar" id="inputFindBar">
+        <label>Find</label>
+        <input type="text" id="inputFindInput" placeholder="Find…" autocomplete="off" spellcheck="false" oninput="countInputMatches()" onkeydown="onFindKeydown(event)" />
+        <button class="btn-ghost btn-sm" onclick="findInputPrev()" title="Previous match (Shift+Enter)">&#8593;</button>
+        <button class="btn-ghost btn-sm" onclick="findInputNext()" title="Next match (Enter)">&#8595;</button>
+        <label>Replace</label>
+        <input type="text" id="inputReplaceInput" placeholder="Replace with…" autocomplete="off" spellcheck="false" />
+        <button class="btn-ghost btn-sm" onclick="replaceNext()">Replace</button>
+        <button class="btn-primary btn-sm" onclick="replaceAll()">Replace All</button>
+        <span class="find-count" id="inputFindCount"></span>
+        <button class="btn-danger btn-sm" onclick="toggleInputFind()">&#10005;</button>
+      </div>
+      <div class="input-wrapper" id="inputWrapper">
+        <div class="drop-overlay" id="dropOverlay">Drop .json file here</div>
+        <div class="input-backdrop" id="inputBackdrop"></div>
+        <textarea id="input" spellcheck="false" placeholder='Paste your JSON here…&#10;&#10;{"name":"Alice","age":30}'
+          oninput="onInputChange()" onscroll="syncBackdropScroll()"></textarea>
+      </div>
+    </div>
+
+    <!-- Middle action buttons -->
+    <div class="middle-actions">
+      <button class="btn-primary" onclick="prettify()" title="Format (Ctrl+Enter)">&#9654; Prettify</button>
+      <button class="btn-ghost"   onclick="minify()"   title="Minify (Ctrl+M)">Minify</button>
+      <button class="btn-ghost"   onclick="validate()" title="Validate">Validate</button>
+      <button class="btn-ghost"   onclick="escapeJson()"   title="Escape special chars">Escape</button>
+      <button class="btn-ghost"   onclick="unescapeJson()" title="Unescape \\n \\t etc.">Unescape</button>
+      <button class="btn-ghost"   onclick="stringify()"    title="Stringify">Stringify</button>
+      <button class="btn-ghost"   onclick="repairJson()"   title="Auto-fix trailing commas, single quotes, unquoted keys">Fix / Repair</button>
+      <div class="divider"></div>
+      <button class="btn-ghost"   onclick="swapPanes()" title="Move output → input">&#8646; Swap</button>
     </div>
 
     <!-- Output pane -->
@@ -291,11 +526,21 @@
         Output
         <span class="line-count" id="outputLines"></span>
         <div class="pane-actions">
-          <button class="btn-ghost btn-sm" onclick="copyOutput()">Copy</button>
+          <button id="rawModeBtn" class="btn-ghost btn-sm" onclick="toggleRawMode()" title="Switch to raw text">&#128220; Raw</button>
+          <button class="btn-ghost btn-sm" onclick="toggleOutputFind()" title="Find in output">&#128269; Find</button>
+          <button class="btn-ghost btn-sm" onclick="downloadOutput()" title="Download as .json">&#11015; Download</button>
+          <button class="btn-ghost btn-sm" onclick="copyOutput()">&#128203; Copy</button>
         </div>
+      </div>
+      <div class="find-bar" id="outputFindBar">
+        <label>Find</label>
+        <input type="text" id="outputFindInput" placeholder="Find in output…" autocomplete="off" spellcheck="false" oninput="renderOutputHighlights()" />
+        <span class="find-count" id="outputFindCount"></span>
+        <button class="btn-danger btn-sm" onclick="toggleOutputFind()">&#10005;</button>
       </div>
       <pre class="output-area" id="output"></pre>
     </div>
+
   </div>
 </main>
 
@@ -309,6 +554,20 @@
 <!-- Toast -->
 <div id="toast"></div>
 
+<!-- URL Modal -->
+<div class="modal-backdrop" id="urlModal" onclick="closeUrlModal(event)">
+  <div class="modal">
+    <h2>&#127760; Fetch JSON from URL</h2>
+    <input type="url" id="urlInput" placeholder="https://api.example.com/data.json"
+      spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')fetchUrl();if(event.key==='Escape')closeUrlModal()" />
+    <p class="modal-hint">The URL must return JSON and support CORS, or use a public endpoint.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeUrlModal()">Cancel</button>
+      <button class="btn-primary" onclick="fetchUrl()">&#9654; Fetch</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const inputEl   = document.getElementById('input');
   const outputEl  = document.getElementById('output');
@@ -318,17 +577,35 @@
   const outputLines = document.getElementById('outputLines');
   const outputDot   = document.getElementById('outputDot');
 
+  let _outputRaw = '';
+  let _inputFindMatches = [];
+  let _inputFindIdx = -1;
+  let _rawMode = false;
+
   /* ── helpers ── */
   function setStatus(msg, type = 'info') {
     statusEl.textContent = msg;
-    statusEl.className = type; // ok | err | info
+    statusEl.className = type;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function setOutput(text, isError = false) {
-    outputEl.textContent = text;
+    _outputRaw = text;
     outputEl.style.color = isError ? 'var(--error)' : '';
-    outputDot.className = 'dot ' + (isError ? 'red' : 'green');
+    outputDot.className = 'dot ' + (isError ? 'red' : (text ? 'green' : ''));
     outputLines.textContent = text ? countLines(text) + ' lines' : '';
+    const outputFindBar = document.getElementById('outputFindBar');
+    if (text && outputFindBar.classList.contains('visible')) {
+      renderOutputHighlights();
+    } else if (text && !isError && !_rawMode) {
+      renderTree();
+    } else {
+      outputEl.classList.remove('tree-mode');
+      outputEl.textContent = text;
+    }
   }
 
   function countLines(str) {
@@ -432,7 +709,7 @@
       .replace(/\r/g, '\\r')
       .replace(/\t/g, '\\t')
       .replace(/\f/g, '\\f')
-      .replace(/\b/g, '\\b');
+      .replace(/[\b]/g, '\\b');
     setOutput(escaped);
     setStatus('Escaped successfully ✓', 'ok');
   }
@@ -486,7 +763,7 @@
 
   /* ── utility actions ── */
   async function copyOutput() {
-    const text = outputEl.textContent;
+    const text = _outputRaw || outputEl.textContent;
     if (!text) { showToast('Nothing to copy'); return; }
     try {
       await navigator.clipboard.writeText(text);
@@ -504,21 +781,50 @@
   }
 
   function swapPanes() {
-    const out = outputEl.textContent;
+    const out = _outputRaw;
     if (!out) { showToast('Output is empty'); return; }
     inputEl.value = out;
-    setOutput('');
+    _outputRaw = '';
+    outputEl.textContent = '';
+    outputLines.textContent = '';
+    outputDot.className = 'dot';
     setStatus('Swapped output → input', 'info');
     onInputChange();
     showToast('Output moved to input');
   }
 
+  function clearInput() {
+    inputEl.value = '';
+    _inputFindMatches = [];
+    _inputFindIdx = -1;
+    document.getElementById('inputFindCount').textContent = '';
+    document.getElementById('inputFindInput').value = '';
+    charCount.textContent = '0 chars';
+    inputLines.textContent = '';
+    setStatus('Input cleared', 'info');
+  }
+
+  function clearOutput() {
+    _outputRaw = '';
+    outputEl.textContent = '';
+    outputEl.innerHTML = '';
+    outputEl.style.color = '';
+    outputLines.textContent = '';
+    outputDot.className = 'dot';
+    document.getElementById('outputFindCount').textContent = '';
+    document.getElementById('outputFindInput').value = '';
+    setStatus('Output cleared', 'info');
+  }
+
   function clearAll() {
     inputEl.value = '';
-    setOutput('');
+    _outputRaw = '';
+    outputEl.textContent = '';
+    outputEl.style.color = '';
     setStatus('Ready', 'info');
     charCount.textContent = '0 chars';
     inputLines.textContent = '';
+    outputLines.textContent = '';
     outputDot.className = 'dot';
   }
 
@@ -542,6 +848,443 @@
     showToast('Sample JSON loaded');
   }
 
+  /* ── input find & replace ── */
+  function toggleInputFind() {
+    const bar = document.getElementById('inputFindBar');
+    const isVisible = bar.classList.toggle('visible');
+    if (isVisible) {
+      document.getElementById('inputFindInput').focus();
+    } else {
+      document.getElementById('inputFindCount').textContent = '';
+      document.getElementById('inputBackdrop').innerHTML = '';
+      _inputFindMatches = [];
+      _inputFindIdx = -1;
+    }
+  }
+
+  function countInputMatches() {
+    const find = document.getElementById('inputFindInput').value;
+    const countEl = document.getElementById('inputFindCount');
+    _inputFindMatches = [];
+    _inputFindIdx = -1;
+    if (!find) { countEl.textContent = ''; renderInputHighlights(); return; }
+    const text = inputEl.value;
+    const textLower = text.toLowerCase();
+    const findLower = find.toLowerCase();
+    let pos = 0;
+    while (true) {
+      const idx = textLower.indexOf(findLower, pos);
+      if (idx === -1) break;
+      _inputFindMatches.push(idx);
+      pos = idx + findLower.length;
+    }
+    const count = _inputFindMatches.length;
+    if (count === 0) { countEl.textContent = 'No matches'; renderInputHighlights(); return; }
+    _inputFindIdx = 0;
+    selectInputMatch(find);
+  }
+
+  function selectInputMatch(find) {
+    if (_inputFindMatches.length === 0) return;
+    const findStr = find || document.getElementById('inputFindInput').value;
+    const start = _inputFindMatches[_inputFindIdx];
+    const end = start + findStr.length;
+    inputEl.setSelectionRange(start, end);
+    const textBefore = inputEl.value.substring(0, start);
+    const lineNum = (textBefore.match(/\n/g) || []).length;
+    const lineHeight = parseFloat(getComputedStyle(inputEl).lineHeight) || 24;
+    inputEl.scrollTop = Math.max(0, lineNum * lineHeight - inputEl.clientHeight / 2);
+    document.getElementById('inputFindCount').textContent =
+      (_inputFindIdx + 1) + ' / ' + _inputFindMatches.length;
+    renderInputHighlights();
+  }
+
+  function renderInputHighlights() {
+    const backdrop = document.getElementById('inputBackdrop');
+    const find = document.getElementById('inputFindInput').value;
+    if (!find || _inputFindMatches.length === 0) { backdrop.innerHTML = ''; return; }
+    const text = inputEl.value;
+    let html = '';
+    let pos = 0;
+    for (let i = 0; i < _inputFindMatches.length; i++) {
+      const start = _inputFindMatches[i];
+      html += escapeHtml(text.substring(pos, start));
+      const matchText = escapeHtml(text.substring(start, start + find.length));
+      html += '<mark class="input-highlight' + (i === _inputFindIdx ? ' current' : '') + '">' + matchText + '</mark>';
+      pos = start + find.length;
+    }
+    html += escapeHtml(text.substring(pos));
+    backdrop.innerHTML = html;
+    syncBackdropScroll();
+  }
+
+  function syncBackdropScroll() {
+    const backdrop = document.getElementById('inputBackdrop');
+    backdrop.scrollTop  = inputEl.scrollTop;
+    backdrop.scrollLeft = inputEl.scrollLeft;
+  }
+
+  function findInputNext() {
+    if (_inputFindMatches.length === 0) { countInputMatches(); return; }
+    _inputFindIdx = (_inputFindIdx + 1) % _inputFindMatches.length;
+    selectInputMatch();
+  }
+
+  function findInputPrev() {
+    if (_inputFindMatches.length === 0) { countInputMatches(); return; }
+    _inputFindIdx = (_inputFindIdx - 1 + _inputFindMatches.length) % _inputFindMatches.length;
+    selectInputMatch();
+  }
+
+  function onFindKeydown(e) {
+    if (e.key === 'Enter')  { e.preventDefault(); e.shiftKey ? findInputPrev() : findInputNext(); }
+    if (e.key === 'Escape') { e.preventDefault(); toggleInputFind(); }
+  }
+
+  function replaceAll() {
+    const find    = document.getElementById('inputFindInput').value;
+    const replace = document.getElementById('inputReplaceInput').value;
+    const countEl = document.getElementById('inputFindCount');
+    if (!find) { showToast('Enter a search term'); return; }
+    const text  = inputEl.value;
+    const escapedFind = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedFind, 'gi');
+    const count = (text.match(regex) || []).length;
+    if (count === 0) {
+      countEl.textContent = 'No matches';
+      showToast('No matches found');
+      return;
+    }
+    inputEl.value = text.replace(regex, replace);
+    onInputChange();
+    _inputFindMatches = [];
+    _inputFindIdx = -1;
+    countEl.textContent = count + ' replaced';
+    setStatus('Replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' ✓', 'ok');
+    showToast('Replaced ' + count + ' occurrence' + (count !== 1 ? 's' : ''));
+  }
+
+  function replaceNext() {
+    const find    = document.getElementById('inputFindInput').value;
+    const replace = document.getElementById('inputReplaceInput').value;
+    if (!find) { showToast('Enter a search term'); return; }
+    if (_inputFindMatches.length === 0) countInputMatches();
+    if (_inputFindMatches.length === 0) { showToast('No match found'); return; }
+    const idx = _inputFindMatches[_inputFindIdx];
+    inputEl.value = inputEl.value.substring(0, idx) + replace + inputEl.value.substring(idx + find.length);
+    onInputChange();
+    countInputMatches();
+    setStatus('Replaced 1 occurrence ✓', 'ok');
+  }
+
+  /* ── output find ── */
+  function toggleOutputFind() {
+    const bar = document.getElementById('outputFindBar');
+    const isVisible = bar.classList.toggle('visible');
+    if (isVisible) {
+      document.getElementById('outputFindInput').focus();
+    } else {
+      document.getElementById('outputFindCount').textContent = '';
+      if (_rawMode) {
+        outputEl.classList.remove('tree-mode');
+        outputEl.textContent = _outputRaw;
+      } else {
+        renderTree();
+      }
+    }
+  }
+
+  function renderOutputHighlights() {
+    const find    = document.getElementById('outputFindInput').value;
+    const countEl = document.getElementById('outputFindCount');
+    if (!find || !_outputRaw) {
+      outputEl.textContent = _outputRaw;
+      countEl.textContent = '';
+      return;
+    }
+    const escapedFindForRegex = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const count = (_outputRaw.match(new RegExp(escapedFindForRegex, 'gi')) || []).length;
+    if (count === 0) {
+      outputEl.textContent = _outputRaw;
+      countEl.textContent = 'No matches';
+      return;
+    }
+    outputEl.classList.remove('tree-mode');
+    const escapedText = escapeHtml(_outputRaw);
+    const escapedFindHtml = escapeHtml(find).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    outputEl.innerHTML = escapedText.replace(new RegExp(escapedFindHtml, 'gi'), '<mark class="highlight">$&</mark>');
+    countEl.textContent = count + ' match' + (count !== 1 ? 'es' : '');
+    const firstMark = outputEl.querySelector('mark.highlight');
+    if (firstMark) firstMark.scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ── Fix / Repair ── */
+  function repairJson() {
+    const raw = getInput().trim();
+    if (!raw) { setStatus('Nothing to repair.', 'err'); return; }
+    try {
+      const parsed = JSON.parse(raw);
+      setOutput(JSON.stringify(parsed, null, 2));
+      setStatus('Already valid — prettified ✓', 'ok');
+      showToast('JSON is already valid');
+      return;
+    } catch {}
+    let fixed = raw;
+    const fixes = [];
+    // 1. JS-style comments
+    const noComments = fixed.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    if (noComments !== fixed) { fixed = noComments; fixes.push('removed comments'); }
+    // 2. Trailing commas before } or ]
+    const noTrailing = fixed.replace(/,(\s*[\}\]])/g, '$1');
+    if (noTrailing !== fixed) { fixed = noTrailing; fixes.push('removed trailing commas'); }
+    // 3. Single-quoted strings → double-quoted
+    const dq = fixed.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (_, content) =>
+      '"' + content.replace(/\\'/g, "'").replace(/"/g, '\\"') + '"'
+    );
+    if (dq !== fixed) { fixed = dq; fixes.push('replaced single quotes'); }
+    // 4. Unquoted keys
+    const quoted = fixed.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+    if (quoted !== fixed) { fixed = quoted; fixes.push('quoted unquoted keys'); }
+    // 5. undefined / NaN / Infinity → null
+    const nulled = fixed
+      .replace(/\bundefined\b/g, 'null')
+      .replace(/\bNaN\b/g, 'null')
+      .replace(/-?Infinity\b/g, 'null');
+    if (nulled !== fixed) { fixed = nulled; fixes.push('replaced undefined/NaN/Infinity'); }
+    try {
+      const parsed = JSON.parse(fixed);
+      const summary = fixes.length ? 'Fixed: ' + fixes.join(', ') + ' ✓' : 'No fixes needed ✓';
+      setOutput(JSON.stringify(parsed, null, 2));
+      setStatus(summary, 'ok');
+      showToast(fixes.length ? 'Repaired: ' + fixes.join(', ') : 'Already valid');
+    } catch (e) {
+      setOutput('⚠ Could not fully repair.\nApplied: ' + (fixes.length ? fixes.join(', ') : 'none') +
+        '\n\nRemaining error: ' + e.message + '\n\n— Partial result —\n' + fixed, true);
+      setStatus('Partial repair — ' + e.message, 'err');
+    }
+  }
+
+  /* ── Tree view ── */
+  function toggleRawMode() {
+    _rawMode = !_rawMode;
+    const btn = document.getElementById('rawModeBtn');
+    btn.classList.toggle('active', _rawMode);
+    btn.textContent = _rawMode ? '\uD83C\uDF32 Tree' : '\uD83D\uDCDC Raw';
+    if (_rawMode) {
+      outputEl.classList.remove('tree-mode');
+      outputEl.textContent = _outputRaw;
+    } else {
+      renderTree();
+    }
+  }
+
+  function renderTree() {
+    if (!_outputRaw) return;
+    try {
+      const parsed = JSON.parse(_outputRaw);
+      outputEl.classList.add('tree-mode');
+      outputEl.innerHTML = buildTreeNode(parsed, '$', '', true);
+    } catch {
+      outputEl.classList.remove('tree-mode');
+      outputEl.textContent = _outputRaw;
+    }
+  }
+
+  function escapeAttr(str) {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function jsonSpan(text, cls, path) {
+    const p = escapeAttr(path);
+    return '<span class="' + cls + '" data-path="' + p + '" onclick="pickPath(this,event)" title="\uD83D\uDCCB ' + p + '">' + text + '</span>';
+  }
+
+  // Builds HTML for one JSON node. keyHtml = pre-built key HTML ('' for root/array items).
+  function buildTreeNode(val, path, keyHtml, isLast) {
+    const comma = isLast ? '' : '<span class="j-punct">,</span>';
+
+    if (val === null)
+      return '<div class="tree-row">' + keyHtml + jsonSpan('null',              'j-null', path) + comma + '</div>';
+    if (typeof val === 'boolean')
+      return '<div class="tree-row">' + keyHtml + jsonSpan(String(val),         'j-bool', path) + comma + '</div>';
+    if (typeof val === 'number')
+      return '<div class="tree-row">' + keyHtml + jsonSpan(String(val),         'j-num',  path) + comma + '</div>';
+    if (typeof val === 'string')
+      return '<div class="tree-row">' + keyHtml + jsonSpan(escapeHtml(JSON.stringify(val)), 'j-str', path) + comma + '</div>';
+
+    const isArr  = Array.isArray(val);
+    const ob     = isArr ? '[' : '{';
+    const cb     = isArr ? ']' : '}';
+    const keys   = isArr ? null : Object.keys(val);
+    const count  = isArr ? val.length : keys.length;
+
+    if (count === 0)
+      return '<div class="tree-row">' + keyHtml + '<span class="j-bracket">' + ob + cb + '</span>' + comma + '</div>';
+
+    const hint  = count + '\u00a0' + (isArr ? (count === 1 ? 'item' : 'items') : (count === 1 ? 'key' : 'keys'));
+    const items = isArr ? val : keys;
+
+    const childrenHtml = items.map((item, i) => {
+      const k         = isArr ? i : item;
+      const v         = isArr ? item : val[item];
+      const childPath = isArr
+        ? path + '[' + k + ']'
+        : (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(String(k))
+            ? path + '.' + k
+            : path + '["' + String(k).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"]');
+      const childKey  = isArr ? '' : (jsonSpan(escapeHtml(JSON.stringify(k)), 'j-key', childPath) + '<span class="j-punct">: </span>');
+      return buildTreeNode(v, childPath, childKey, i === count - 1);
+    }).join('');
+
+    return '<details class="tree-details" open>' +
+      '<summary class="tree-summary">' +
+        '<span class="tree-caret"></span>' +
+        keyHtml +
+        '<span class="j-bracket">' + ob + '</span>' +
+        '<span class="tree-closed-hint">\u2009' + escapeHtml(hint) + '\u2009<span class="j-bracket">' + cb + '</span></span>' +
+      '</summary>' +
+      '<div class="tree-children">' + childrenHtml + '</div>' +
+      '<div class="tree-tail"><span class="j-bracket">' + cb + '</span>' + comma + '</div>' +
+      '</details>';
+  }
+
+  function pickPath(el, e) {
+    if (e) e.stopPropagation();
+    const path = el.dataset.path;
+    navigator.clipboard.writeText(path)
+      .then(() => showToast('Copied: ' + path))
+      .catch(() => showToast('Path: ' + path));
+  }
+
+  /* ── Load from URL ── */
+  function openUrlModal() {
+    document.getElementById('urlModal').classList.add('open');
+    setTimeout(() => document.getElementById('urlInput').focus(), 50);
+  }
+
+  function closeUrlModal(e) {
+    if (e && e.target !== document.getElementById('urlModal')) return;
+    document.getElementById('urlModal').classList.remove('open');
+  }
+
+  async function fetchUrl() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) { showToast('Enter a URL'); return; }
+    // Must be absolute http(s) URL
+    if (!/^https?:\/\/.+/i.test(url)) { showToast('URL must start with http:// or https://'); return; }
+    document.getElementById('urlModal').classList.remove('open');
+    setStatus('Fetching…', 'info');
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000); // 10 s timeout
+      const resp = await fetch(url, {
+        signal: controller.signal,
+        credentials: 'omit',    // never send cookies to third-party
+        mode: 'cors'
+      });
+      clearTimeout(timer);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ' + resp.statusText);
+      // Refuse oversized responses (> 10 MB)
+      const cl = resp.headers.get('content-length');
+      if (cl && Number(cl) > 10 * 1024 * 1024) throw new Error('Response exceeds 10 MB limit');
+      const text = await resp.text();
+      if (text.length > 10 * 1024 * 1024) throw new Error('Response exceeds 10 MB limit');
+      // Validate it's JSON before loading
+      JSON.parse(text);
+      inputEl.value = text;
+      onInputChange();
+      setStatus('Loaded from URL ✓', 'ok');
+      showToast('JSON loaded from URL');
+      document.getElementById('urlInput').value = '';
+    } catch (e) {
+      setStatus('Fetch failed — ' + e.message, 'err');
+      showToast('Error: ' + e.message);
+    }
+  }
+
+  /* ── File upload ── */
+  function handleFileUpload(event) {
+    const file = event.target.files[0];
+    event.target.value = '';           // reset so same file can be re-uploaded
+    if (!file) return;
+    // 10 MB max for file upload
+    if (file.size > 10 * 1024 * 1024) { showToast('File exceeds 10 MB limit'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text = ev.target.result;
+      try { JSON.parse(text); } catch (e) {
+        showToast('File is not valid JSON: ' + e.message);
+        setStatus('Invalid JSON in file — ' + e.message, 'err');
+        return;
+      }
+      inputEl.value = text;
+      onInputChange();
+      setStatus('File loaded: ' + file.name + ' ✓', 'ok');
+      showToast('Loaded: ' + file.name);
+    };
+    reader.onerror = () => showToast('Could not read file');
+    reader.readAsText(file);
+  }
+
+  /* ── Drag-and-drop ── */
+  (function initDrop() {
+    const wrapper = document.getElementById('inputWrapper');
+    const overlay = document.getElementById('dropOverlay');
+    let dragDepth = 0;
+
+    wrapper.addEventListener('dragenter', e => {
+      e.preventDefault();
+      dragDepth++;
+      if ([...e.dataTransfer.items].some(i => i.kind === 'file')) overlay.classList.add('active');
+    });
+    wrapper.addEventListener('dragleave', () => {
+      dragDepth--;
+      if (dragDepth <= 0) { dragDepth = 0; overlay.classList.remove('active'); }
+    });
+    wrapper.addEventListener('dragover', e => e.preventDefault());
+    wrapper.addEventListener('drop', e => {
+      e.preventDefault();
+      dragDepth = 0;
+      overlay.classList.remove('active');
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      if (!file.name.endsWith('.json') && file.type !== 'application/json' && file.type !== 'text/plain') {
+        showToast('Please drop a .json file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const text = ev.target.result;
+        try { JSON.parse(text); } catch (err) {
+          showToast('File is not valid JSON: ' + err.message);
+          setStatus('Invalid JSON in file — ' + err.message, 'err');
+          return;
+        }
+        inputEl.value = text;
+        onInputChange();
+        setStatus('File loaded: ' + file.name + ' ✓', 'ok');
+        showToast('Loaded: ' + file.name);
+      };
+      reader.readAsText(file);
+    });
+  })();
+
+  /* ── Download output ── */
+  function downloadOutput() {
+    const text = _outputRaw;
+    if (!text) { showToast('Nothing to download'); return; }
+    const blob = new Blob([text], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'output.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Downloaded output.json');
+  }
+
   /* ── keyboard shortcuts ── */
   document.addEventListener('keydown', e => {
     const mod = e.ctrlKey || e.metaKey;
@@ -549,6 +1292,7 @@
     if (e.key === 'Enter') { e.preventDefault(); prettify(); }
     if (e.key === 'm')     { e.preventDefault(); minify(); }
     if (e.key === 'k')     { e.preventDefault(); clearAll(); }
+    if (e.key === 'h')     { e.preventDefault(); toggleInputFind(); }
   });
 
   // Init
