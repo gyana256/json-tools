@@ -13,6 +13,8 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html { height: 100%; overflow: hidden; }
+
     :root {
       --bg: #13162b;
       --surface: #1a1e38;
@@ -58,7 +60,8 @@
       background: var(--bg);
       background-image: radial-gradient(ellipse 80% 55% at 50% -8%, rgba(99,102,241,.14) 0%, transparent 68%);
       color: var(--text);
-      min-height: 100vh;
+      height: 100%;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       transition: var(--t);
@@ -170,6 +173,150 @@
     }
     #themeToggle:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
+    /* ── History dropdown ── */
+    .history-wrapper { position: relative; }
+    .history-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 340px;
+      max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 200;
+      overflow: hidden;
+    }
+    .history-dropdown.open { display: block; }
+    .history-dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .history-list { max-height: 300px; overflow-y: auto; }
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: var(--surface2); }
+    .history-item-preview {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-item-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .history-empty {
+      padding: 20px 14px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Extra tool panels (Diff, JSONPath) ── */
+    .extra-panel {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+    .extra-panel.visible { display: flex; }
+    .diff-editors {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+    .diff-result {
+      flex: 1;
+      min-height: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .diff-result pre {
+      width: 100%; height: 100%;
+      padding: 16px;
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .diff-add  { background: rgba(34,197,94,.15); color: #4ade80; }
+    .diff-rem  { background: rgba(239,68,68,.15); color: #f87171; }
+    .diff-key  { color: #f0abfc; }
+    body.light .diff-add { background: rgba(34,197,94,.12); color: #15803d; }
+    body.light .diff-rem { background: rgba(239,68,68,.12); color: #b91c1c; }
+    .jsonpath-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .jsonpath-bar input {
+      flex: 1;
+      min-width: 200px;
+      padding: 8px 13px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.87rem;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .jsonpath-bar input:focus { border-color: var(--accent); }
+    .jsonpath-bar input::placeholder { color: var(--text-muted); }
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      transition: var(--t);
+    }
+    .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
     /* ── Main layout ── */
     main {
       flex: 1;
@@ -177,6 +324,8 @@
       flex-direction: column;
       padding: 24px 28px 8px;
       gap: 20px;
+      overflow: hidden;
+      min-height: 0;
     }
 
     /* ── Toolbar ── */
@@ -268,6 +417,7 @@
       grid-template-columns: 1fr auto 1fr;
       gap: 0 14px;
       flex: 1;
+      min-height: 0;
       align-items: stretch;
     }
 
@@ -306,6 +456,7 @@
       overflow: hidden;
       box-shadow: var(--shadow-sm);
       transition: var(--t);
+      min-height: 0;
     }
 
     .pane-header {
@@ -336,7 +487,7 @@
 
     textarea, .output-area {
       flex: 1;
-      min-height: 340px;
+      min-height: 0;
       padding: 16px;
       background: transparent;
       color: var(--text);
@@ -636,12 +787,30 @@
     <span class="header-sub">All-in-one JSON utility</span>
   </div>
   <div class="header-spacer"></div>
+  <!-- History button -->
+  <div class="history-wrapper" id="historyWrapper">
+    <button class="btn-ghost btn-sm" onclick="toggleHistoryDropdown()" title="Input history">&#128336; History</button>
+    <div class="history-dropdown" id="historyDropdown">
+      <div class="history-dropdown-header">
+        <span>Recent inputs</span>
+        <button class="btn-danger btn-sm" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
   <button id="themeToggle" class="btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle light / dark mode">&#127769;</button>
 </header>
 
 <main>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('main', this)">&#9881; Main</button>
+    <button class="tab-btn" onclick="switchTab('diff', this)">&#8596; Diff</button>
+    <button class="tab-btn" onclick="switchTab('jsonpath', this)">&#128269; JSONPath</button>
+  </div>
+
   <!-- Editors with middle action buttons -->
-  <div class="editors">
+  <div class="editors" id="tabMain">
 
     <!-- Input pane -->
     <div class="pane">
@@ -655,6 +824,7 @@
           <button class="btn-ghost btn-sm" onclick="toggleInputFind()" title="Find &amp; Replace (Ctrl+H)">&#128269; Find</button>
           <button class="btn-ghost btn-sm" onclick="loadSample()">Load sample</button>
           <button class="btn-danger btn-sm" onclick="clearInput()" title="Clear input">&#10005; Clear</button>
+          <button class="btn-ghost btn-sm" onclick="saveToHistory()" title="Save to history">&#128190; Save</button>
         </div>
         <input type="file" id="fileInput" accept=".json,application/json,text/plain" style="display:none" onchange="handleFileUpload(event)" />
       </div>
@@ -673,7 +843,7 @@
       <div class="input-wrapper" id="inputWrapper">
         <div class="drop-overlay" id="dropOverlay">Drop .json file here</div>
         <div class="input-backdrop" id="inputBackdrop"></div>
-        <textarea id="input" spellcheck="false" placeholder='Paste your JSON here…&#10;&#10;{"name":"Alice","age":30}'
+        <textarea id="input" spellcheck="false" placeholder='Paste your JSON here…&#10;&#10;{"name":"Gyana","age":29,"projects":[{"name":"JSON tools","status":"completed"},{"name":"Project B","status":"in progress"}]}'
           oninput="onInputChange()" onscroll="syncBackdropScroll()"></textarea>
       </div>
     </div>
@@ -687,6 +857,11 @@
       <button class="btn-orange"  onclick="unescapeJson()"  title="Unescape \\n \\t etc.">&#10093; Unescape</button>
       <button class="btn-purple"  onclick="stringify()"     title="Stringify">&#10087; Stringify</button>
       <button class="btn-pink"    onclick="repairJson()"    title="Auto-fix trailing commas, single quotes, unquoted keys">&#10024; Fix / Repair</button>
+      <div class="divider"></div>
+      <button class="btn-sky"     onclick="jsonToCsv()"     title="JSON array → CSV">&#9776; JSON→CSV</button>
+      <button class="btn-emerald" onclick="csvToJson()"     title="CSV → JSON array">&#8645; CSV→JSON</button>
+      <button class="btn-teal"    onclick="jsonToYaml()"    title="JSON → YAML">&#128196; JSON→YAML</button>
+      <button class="btn-purple"  onclick="jsonToTs()"      title="JSON → TypeScript types">&#128737; JSON→TS</button>
       <div class="divider"></div>
       <button class="btn-teal"    onclick="swapPanes()"     title="Move output &#8594; input">&#8646; Swap</button>
     </div>
@@ -714,6 +889,49 @@
     </div>
 
   </div>
+
+  <!-- Diff panel -->
+  <div class="extra-panel" id="tabDiff">
+    <div class="diff-editors">
+      <div class="pane">
+        <div class="pane-header"><span class="dot yellow"></span>JSON A (original)</div>
+        <textarea id="diffA" spellcheck="false" placeholder='Paste original JSON here…' style="flex:1;min-height:0;padding:16px;background:transparent;color:var(--text);font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;border:none;outline:none;resize:none;tab-size:2;white-space:pre;overflow:auto;"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-header"><span class="dot green"></span>JSON B (modified)</div>
+        <textarea id="diffB" spellcheck="false" placeholder='Paste modified JSON here…' style="flex:1;min-height:0;padding:16px;background:transparent;color:var(--text);font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;border:none;outline:none;resize:none;tab-size:2;white-space:pre;overflow:auto;"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+      <button class="btn-indigo" onclick="runDiff()">&#8596; Compare</button>
+      <button class="btn-ghost" onclick="document.getElementById('diffResult').innerHTML=''">Clear result</button>
+      <span id="diffStatus" style="font-size:0.8rem;color:var(--text-muted);"></span>
+    </div>
+    <div class="diff-result" style="flex:1;min-height:0;">
+      <pre id="diffResult"></pre>
+    </div>
+  </div>
+
+  <!-- JSONPath panel -->
+  <div class="extra-panel" id="tabJsonpath">
+    <div class="jsonpath-bar">
+      <input type="text" id="jsonpathInput" placeholder="$.store.book[*].title" spellcheck="false" autocomplete="off" onkeydown="if(event.key==='Enter')runJsonPath()" />
+      <button class="btn-indigo" onclick="runJsonPath()">&#9654; Run</button>
+      <button class="btn-ghost" onclick="document.getElementById('jsonpathInput').value='$'">Reset</button>
+      <span id="jsonpathStatus" style="font-size:0.8rem;color:var(--text-muted);"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0;">
+      <div class="pane">
+        <div class="pane-header"><span class="dot yellow"></span>Input JSON</div>
+        <textarea id="jsonpathInput2" spellcheck="false" placeholder='Paste JSON to query…' style="flex:1;min-height:0;padding:16px;background:transparent;color:var(--text);font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;border:none;outline:none;resize:none;tab-size:2;white-space:pre;overflow:auto;"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-header"><span class="dot green" id="jpDot"></span>Results<div class="pane-actions"><button class="btn-ghost btn-sm" onclick="copyJsonPathResult()">&#128203; Copy</button></div></div>
+        <pre id="jsonpathResult" style="flex:1;min-height:0;padding:16px;margin:0;font-family:var(--font-mono);font-size:0.85rem;line-height:1.7;overflow:auto;white-space:pre-wrap;word-break:break-word;"></pre>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- Status bar -->
@@ -753,6 +971,8 @@
   let _inputFindMatches = [];
   let _inputFindIdx = -1;
   let _rawMode = false;
+  const HISTORY_KEY = 'json-tools-history';
+  const HISTORY_MAX = 20;
 
   /* ── helpers ── */
   function setStatus(msg, type = 'info') {
@@ -1493,6 +1713,467 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast('Downloaded output.json');
+  }
+
+  /* ── Tab switching ── */
+  function switchTab(name, btn) {
+    const activeId = 'tab' + name.charAt(0).toUpperCase() + name.slice(1);
+    // tabMain is .editors (flex shown via style.display)
+    const mainEl = document.getElementById('tabMain');
+    mainEl.style.display = activeId === 'tabMain' ? '' : 'none';
+    // extra panels use .extra-panel + .visible class
+    ['tabDiff','tabJsonpath'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('visible', id === activeId);
+    });
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  // init — extra panels hidden
+  document.getElementById('tabDiff').classList.remove('visible');
+  document.getElementById('tabJsonpath').classList.remove('visible');
+
+  /* ── History ── */
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+  }
+  function saveHistory(items) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(items)); } catch {}
+  }
+  function saveToHistory() {
+    const val = inputEl.value.trim();
+    if (!val) { showToast('Input is empty'); return; }
+    const items = loadHistory();
+    // Deduplicate
+    const filtered = items.filter(h => h.text !== val);
+    filtered.unshift({ text: val, ts: Date.now() });
+    if (filtered.length > HISTORY_MAX) filtered.length = HISTORY_MAX;
+    saveHistory(filtered);
+    renderHistoryList();
+    showToast('Saved to history');
+  }
+  function renderHistoryList() {
+    const list = document.getElementById('historyList');
+    const items = loadHistory();
+    if (items.length === 0) {
+      list.innerHTML = '<div class="history-empty">No saved inputs yet</div>';
+      return;
+    }
+    list.innerHTML = items.map((h, i) => {
+      const preview = h.text.replace(/\s+/g, ' ').substring(0, 80);
+      const age = formatAge(Date.now() - h.ts);
+      return '<div class="history-item" onclick="restoreHistory(' + i + ')">' +
+        '<div class="history-item-preview">' + escapeHtml(preview) + (h.text.length > 80 ? '…' : '') + '</div>' +
+        '<div class="history-item-meta">' + age + '</div>' +
+        '</div>';
+    }).join('');
+  }
+  function formatAge(ms) {
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + 'm ago';
+    const h = Math.floor(m / 60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
+  }
+  function restoreHistory(idx) {
+    const items = loadHistory();
+    if (!items[idx]) return;
+    inputEl.value = items[idx].text;
+    onInputChange();
+    setStatus('Restored from history ✓', 'ok');
+    showToast('Restored from history');
+    closeHistoryDropdown();
+  }
+  function clearHistory() {
+    saveHistory([]);
+    renderHistoryList();
+    showToast('History cleared');
+  }
+  function toggleHistoryDropdown() {
+    const dd = document.getElementById('historyDropdown');
+    const isOpen = dd.classList.toggle('open');
+    if (isOpen) renderHistoryList();
+  }
+  function closeHistoryDropdown() {
+    document.getElementById('historyDropdown').classList.remove('open');
+  }
+  // Close history dropdown on outside click
+  document.addEventListener('click', e => {
+    const wrapper = document.getElementById('historyWrapper');
+    if (wrapper && !wrapper.contains(e.target)) closeHistoryDropdown();
+  });
+
+  /* ── JSON → CSV ── */
+  function jsonToCsv() {
+    const raw = getInput().trim();
+    if (!raw) { setStatus('Nothing to convert.', 'err'); return; }
+    let parsed;
+    try { parsed = tryParse(raw); } catch (e) { setOutput('Error: ' + e.message, true); setStatus('Invalid JSON — ' + e.message, 'err'); return; }
+    const arr = Array.isArray(parsed) ? parsed : [parsed];
+    const flatItems = arr.filter(r => r !== null && typeof r === 'object' && !Array.isArray(r));
+    if (flatItems.length === 0) { setOutput('Error: input must be an array of objects', true); setStatus('JSON→CSV: expected array of objects', 'err'); return; }
+    const allKeys = [];
+    flatItems.forEach(row => Object.keys(row).forEach(k => { if (!allKeys.includes(k)) allKeys.push(k); }));
+    const escape = v => {
+      if (v === null || v === undefined) return '';
+      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
+    };
+    const header = allKeys.map(k => escape(k)).join(',');
+    const rows = flatItems.map(row => allKeys.map(k => escape(row[k])).join(','));
+    const csv = [header, ...rows].join('\n');
+    setOutput(csv);
+    setStatus('JSON → CSV ✓  ' + flatItems.length + ' rows, ' + allKeys.length + ' columns', 'ok');
+  }
+
+  /* ── CSV → JSON ── */
+  function csvToJson() {
+    const raw = getInput().trim();
+    if (!raw) { setStatus('Nothing to convert.', 'err'); return; }
+    const lines = raw.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { setOutput('Error: CSV must have a header row and at least one data row', true); setStatus('CSV→JSON: need header + data', 'err'); return; }
+    function parseCsvLine(line) {
+      const result = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (inQ) {
+          if (c === '"' && line[i+1] === '"') { cur += '"'; i++; }
+          else if (c === '"') inQ = false;
+          else cur += c;
+        } else {
+          if (c === '"') inQ = true;
+          else if (c === ',') { result.push(cur); cur = ''; }
+          else cur += c;
+        }
+      }
+      result.push(cur);
+      return result;
+    }
+    const headers = parseCsvLine(lines[0]);
+    const records = lines.slice(1).map(line => {
+      const vals = parseCsvLine(line);
+      const obj = {};
+      headers.forEach((h, i) => {
+        const v = vals[i] !== undefined ? vals[i] : '';
+        const n = Number(v);
+        obj[h] = v === '' ? null : (!isNaN(n) && v.trim() !== '' ? n : (v === 'true' ? true : v === 'false' ? false : v));
+      });
+      return obj;
+    });
+    setOutput(JSON.stringify(records, null, 2));
+    setStatus('CSV → JSON ✓  ' + records.length + ' records', 'ok');
+  }
+
+  /* ── JSON → YAML ── */
+  function jsonToYaml() {
+    const raw = getInput().trim();
+    if (!raw) { setStatus('Nothing to convert.', 'err'); return; }
+    let parsed;
+    try { parsed = tryParse(raw); } catch (e) { setOutput('Error: ' + e.message, true); setStatus('Invalid JSON — ' + e.message, 'err'); return; }
+    function toYaml(val, indent, inSeq) {
+      const pad = ' '.repeat(indent);
+      const seqPad = inSeq ? '' : pad;
+      if (val === null) return 'null';
+      if (typeof val === 'boolean') return String(val);
+      if (typeof val === 'number') return String(val);
+      if (typeof val === 'string') {
+        if (val === '' || /[:{\[\]|>&*!,#]|^[- ?]|[\r\n]/.test(val) || /^[0-9]/.test(val) || ['true','false','null','yes','no','on','off'].includes(val.toLowerCase())) {
+          return '"' + val.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r') + '"';
+        }
+        return val;
+      }
+      if (Array.isArray(val)) {
+        if (val.length === 0) return '[]';
+        return '\n' + val.map(item => {
+          const rendered = toYaml(item, indent + 2, true);
+          const firstLine = rendered.startsWith('\n') ? '' : ' ' + rendered.split('\n')[0];
+          const rest = rendered.startsWith('\n') ? rendered : '\n' + rendered.split('\n').slice(1).map(l => (indent + 2 > 0 ? ' '.repeat(indent + 2) : '') + l).join('\n');
+          return pad + '-' + firstLine + (rendered.startsWith('\n') ? rendered : '');
+        }).join('\n');
+      }
+      if (typeof val === 'object') {
+        const keys = Object.keys(val);
+        if (keys.length === 0) return '{}';
+        return (inSeq ? '' : '\n') + keys.map((k, ki) => {
+          const v = val[k];
+          const yamlKey = /[:{\[\]|>&*!,#\s]|^[- ?]/.test(k) ? '"' + k.replace(/"/g, '\\"') + '"' : k;
+          const rendered = toYaml(v, indent + 2, false);
+          const isBlock = rendered.startsWith('\n');
+          const prefix = (ki === 0 && inSeq ? '' : pad);
+          return prefix + yamlKey + ':' + (isBlock ? rendered : ' ' + rendered);
+        }).join('\n');
+      }
+      return String(val);
+    }
+    let yaml;
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      yaml = Object.keys(parsed).map(k => {
+        const v = parsed[k];
+        const yamlKey = /[:{\[\]|>&*!,#\s]|^[- ?]/.test(k) ? '"' + k.replace(/"/g, '\\"') + '"' : k;
+        const rendered = toYaml(v, 2, false);
+        return yamlKey + ':' + (rendered.startsWith('\n') ? rendered : ' ' + rendered);
+      }).join('\n');
+    } else {
+      yaml = toYaml(parsed, 0, false);
+    }
+    setOutput(yaml.trimStart());
+    setStatus('JSON → YAML ✓', 'ok');
+  }
+
+  /* ── JSON → TypeScript types ── */
+  function jsonToTs() {
+    const raw = getInput().trim();
+    if (!raw) { setStatus('Nothing to convert.', 'err'); return; }
+    let parsed;
+    try { parsed = tryParse(raw); } catch (e) { setOutput('Error: ' + e.message, true); setStatus('Invalid JSON — ' + e.message, 'err'); return; }
+    const interfaces = [];
+    const seen = new Map();
+    function tsType(val, name) {
+      if (val === null) return 'null';
+      if (typeof val === 'boolean') return 'boolean';
+      if (typeof val === 'number') return 'number';
+      if (typeof val === 'string') return 'string';
+      if (Array.isArray(val)) {
+        if (val.length === 0) return 'unknown[]';
+        const itemTypes = [...new Set(val.map((v, i) => tsType(v, name + 'Item')))];
+        const inner = itemTypes.length === 1 ? itemTypes[0] : '(' + itemTypes.join(' | ') + ')';
+        return inner + '[]';
+      }
+      if (typeof val === 'object') {
+        const iName = toPascal(name);
+        const keys = Object.keys(val);
+        const fields = keys.map(k => {
+          const fieldName = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k) ? k : '"' + k + '"';
+          const t = tsType(val[k], k);
+          return '  ' + fieldName + ': ' + t + ';';
+        }).join('\n');
+        const body = 'interface ' + iName + ' {\n' + fields + '\n}';
+        if (!seen.has(iName)) { seen.set(iName, true); interfaces.push(body); }
+        return iName;
+      }
+      return 'unknown';
+    }
+    function toPascal(str) {
+      return str.replace(/(^|_|-)([a-z])/g, (_, __, c) => c.toUpperCase())
+               .replace(/^[a-z]/, c => c.toUpperCase())
+               .replace(/[^a-zA-Z0-9_$]/g, '_') || 'Root';
+    }
+    const rootType = tsType(parsed, 'Root');
+    const isInterface = interfaces.length > 0;
+    const output = (isInterface ? interfaces.join('\n\n') + '\n\n' : '') +
+      'export type Root = ' + (isInterface ? toPascal('Root') : rootType) + ';';
+    setOutput(output);
+    setStatus('JSON → TypeScript types ✓', 'ok');
+  }
+
+  /* ── JSON Diff ── */
+  function runDiff() {
+    const aRaw = document.getElementById('diffA').value.trim();
+    const bRaw = document.getElementById('diffB').value.trim();
+    const statusEl2 = document.getElementById('diffStatus');
+    const resultEl = document.getElementById('diffResult');
+    if (!aRaw || !bRaw) { statusEl2.textContent = 'Paste JSON in both panes'; return; }
+    let a, b;
+    try { a = JSON.parse(aRaw); } catch (e) { statusEl2.textContent = 'JSON A: ' + e.message; return; }
+    try { b = JSON.parse(bRaw); } catch (e) { statusEl2.textContent = 'JSON B: ' + e.message; return; }
+    statusEl2.textContent = '';
+    const changes = [];
+    function diff(av, bv, path) {
+      if (av === bv) return;
+      if (typeof av !== typeof bv || Array.isArray(av) !== Array.isArray(bv) ||
+          av === null || bv === null || typeof av !== 'object') {
+        changes.push({ path, a: av, b: bv });
+        return;
+      }
+      const aKeys = Object.keys(av);
+      const bKeys = Object.keys(bv);
+      const allKeys = [...new Set([...aKeys, ...bKeys])];
+      allKeys.forEach(k => {
+        const p = Array.isArray(av) ? path + '[' + k + ']' : path + (path ? '.' : '') + k;
+        if (!(k in av)) { changes.push({ path: p, a: undefined, b: bv[k] }); }
+        else if (!(k in bv)) { changes.push({ path: p, a: av[k], b: undefined }); }
+        else diff(av[k], bv[k], p);
+      });
+    }
+    diff(a, b, '$');
+    if (changes.length === 0) {
+      resultEl.innerHTML = '<span style="color:var(--success)">&#10003; JSON objects are identical</span>';
+      statusEl2.textContent = 'No differences found';
+      return;
+    }
+    statusEl2.textContent = changes.length + ' difference' + (changes.length !== 1 ? 's' : '') + ' found';
+    const fmt = v => v === undefined ? '<em style="color:var(--text-muted)">(missing)</em>' : escapeHtml(JSON.stringify(v, null, 2));
+    resultEl.innerHTML = changes.map(c => {
+      const pathHtml = '<span class="diff-key">' + escapeHtml(c.path) + '</span>\n';
+      const remLine = c.a !== undefined ? '<span class="diff-rem">- ' + fmt(c.a) + '</span>\n' : '';
+      const addLine = c.b !== undefined ? '<span class="diff-add">+ ' + fmt(c.b) + '</span>' : '';
+      return pathHtml + remLine + addLine;
+    }).join('\n\n');
+  }
+
+  /* ── JSONPath query ── */
+  function runJsonPath() {
+    const expr = document.getElementById('jsonpathInput').value.trim();
+    const raw  = document.getElementById('jsonpathInput2').value.trim();
+    const statusEl3 = document.getElementById('jsonpathStatus');
+    const resultEl  = document.getElementById('jsonpathResult');
+    const dot = document.getElementById('jpDot');
+    if (!raw)  { statusEl3.textContent = 'Paste JSON in the input pane'; return; }
+    if (!expr) { statusEl3.textContent = 'Enter a JSONPath expression'; return; }
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch (e) { statusEl3.textContent = 'Invalid JSON: ' + e.message; return; }
+    try {
+      const results = jsonPathQuery(parsed, expr);
+      resultEl.textContent = JSON.stringify(results, null, 2);
+      dot.className = 'dot green';
+      statusEl3.textContent = results.length + ' result' + (results.length !== 1 ? 's' : '');
+    } catch (e) {
+      resultEl.textContent = 'Error: ' + e.message;
+      dot.className = 'dot red';
+      statusEl3.textContent = 'Error';
+    }
+  }
+  function copyJsonPathResult() {
+    const text = document.getElementById('jsonpathResult').textContent;
+    if (!text) { showToast('Nothing to copy'); return; }
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => showToast('Copy failed'));
+  }
+
+  /* ── JSONPath engine ── */
+  function jsonPathQuery(root, expr) {
+    if (!expr.startsWith('$')) throw new Error('Expression must start with $');
+    function match(nodes, seg) {
+      const results = [];
+      nodes.forEach(({ val, path }) => {
+        // recursive descent
+        if (seg === '..') {
+          results.push({ val, path });
+          if (val !== null && typeof val === 'object') {
+            const children = Array.isArray(val) ? val.map((v,i)=>({val:v,path:path+'['+i+']'})) : Object.keys(val).map(k=>({val:val[k],path:path+'.'+k}));
+            children.forEach(c => match([c], '..').forEach(r => results.push(r)));
+          }
+          return;
+        }
+        if (val === null || typeof val !== 'object') return;
+        if (seg === '*') {
+          (Array.isArray(val)
+            ? val.map((v,i)=>({val:v,path:path+'['+i+']'}))
+            : Object.keys(val).map(k=>({val:val[k],path:path+'.'+k}))
+          ).forEach(r => results.push(r));
+          return;
+        }
+        // numeric index [n] or [n,m,...] or [n:m] slice
+        const sliceM = seg.match(/^(-?\d+):(-?\d+)?$/);
+        if (Array.isArray(val) && sliceM) {
+          const len = val.length;
+          let start = parseInt(sliceM[1]); if (start < 0) start = Math.max(0, len + start);
+          let end   = sliceM[2] !== undefined ? parseInt(sliceM[2]) : len; if (end < 0) end = Math.max(0, len + end);
+          for (let i = start; i < Math.min(end, len); i++) results.push({ val: val[i], path: path+'['+i+']' });
+          return;
+        }
+        // filter expression [?(@.key operator value)]
+        const filterM = seg.match(/^\?\((.+)\)$/);
+        if (filterM && Array.isArray(val)) {
+          val.forEach((item, i) => {
+            try { if (evalFilter(item, filterM[1])) results.push({ val: item, path: path+'['+i+']' }); } catch {}
+          });
+          return;
+        }
+        // multi-index [0,1,2]
+        if (/^[\d,\s]+$/.test(seg)) {
+          seg.split(',').map(s => parseInt(s.trim())).forEach(i => {
+            if (Array.isArray(val) && i >= 0 && i < val.length) results.push({ val: val[i], path: path+'['+i+']' });
+          });
+          return;
+        }
+        // key
+        if (Array.isArray(val)) {
+          const i = parseInt(seg);
+          if (!isNaN(i) && i >= 0 && i < val.length) results.push({ val: val[i], path: path+'['+i+']' });
+        } else {
+          const k = seg.replace(/^['"]|['"]$/g, '');
+          if (k in val) results.push({ val: val[k], path: path+(path?'.':'')+k });
+        }
+      });
+      return results;
+    }
+    function evalFilter(item, expr) {
+      // simple @.key op value
+      const m = expr.trim().match(/^@\.([\w$]+)\s*(==|!=|>=|<=|>|<)\s*(.+)$/);
+      if (m) {
+        const actual = item != null ? item[m[1]] : undefined;
+        let expected = m[3].trim();
+        if (expected === 'null') expected = null;
+        else if (expected === 'true') expected = true;
+        else if (expected === 'false') expected = false;
+        else if (/^['"].*['"]$/.test(expected)) expected = expected.slice(1,-1);
+        else { const n = Number(expected); if (!isNaN(n)) expected = n; }
+        switch(m[2]) {
+          case '==': return actual == expected;
+          case '!=': return actual != expected;
+          case '>':  return actual >  expected;
+          case '<':  return actual <  expected;
+          case '>=': return actual >= expected;
+          case '<=': return actual <= expected;
+        }
+      }
+      // @.key existence
+      const em = expr.trim().match(/^@\.([\w$]+)$/);
+      if (em) return item != null && em[1] in item;
+      return false;
+    }
+    // tokenise path into segments
+    const tokens = [];
+    let rest = expr.slice(1); // remove leading $
+    while (rest.length > 0) {
+      if (rest.startsWith('..')) { tokens.push('..'); rest = rest.slice(2); }
+      else if (rest.startsWith('.')) {
+        rest = rest.slice(1);
+        const m = rest.match(/^([\w$*]+)/);
+        if (m) { tokens.push(m[1]); rest = rest.slice(m[1].length); }
+      } else if (rest.startsWith('[')) {
+        const close = rest.indexOf(']');
+        if (close === -1) throw new Error('Unclosed [');
+        tokens.push(rest.slice(1, close));
+        rest = rest.slice(close + 1);
+      } else {
+        const m = rest.match(/^([\w$*]+)/);
+        if (m) { tokens.push(m[1]); rest = rest.slice(m[1].length); }
+        else rest = rest.slice(1);
+      }
+    }
+    let nodes = [{ val: root, path: '$' }];
+    let i = 0;
+    while (i < tokens.length) {
+      if (tokens[i] === '..') {
+        i++;
+        const nextSeg = tokens[i];
+        // collect all descendants first, then filter by nextSeg
+        let all = [];
+        function collect(v, p) {
+          all.push({ val: v, path: p });
+          if (v !== null && typeof v === 'object') {
+            if (Array.isArray(v)) v.forEach((c,ci) => collect(c, p+'['+ci+']'));
+            else Object.keys(v).forEach(k => collect(v[k], p+'.'+k));
+          }
+        }
+        nodes.forEach(n => collect(n.val, n.path));
+        if (nextSeg !== undefined) {
+          nodes = all.filter(({val}) => val !== null && typeof val === 'object' && !Array.isArray(val) && nextSeg in val)
+                     .map(({val, path}) => ({ val: val[nextSeg], path: path+'.'+nextSeg }));
+          i++;
+        } else {
+          nodes = all;
+        }
+      } else {
+        nodes = match(nodes, tokens[i]);
+        i++;
+      }
+    }
+    return nodes.map(n => n.val);
   }
 
   /* ── Theme toggle ── */
